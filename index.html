@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="main.js" type="text/javascript"></script>
+    <script type="text/javascript">
+      var Module = {
+        onRuntimeInitialized: function() {
+          console.log('Module Loaded ', Module);
+          render();
+        }    
+      }
+    </script>
+    <script src="file_functions_wasm.js" type="text/javascript"></script>
+    <title>Affinity Insights</title>
+</head>
+
+<body>
+  <div class="content">
+    <h1>Count Rows in CSV</h1>
+    <form action="/" method="POST" enctype="multipart/form-data" id="count-rows">
+      <input type="file" name="file" id="file-upload-count-rows">
+      <input type="submit" value="Count Rows">
+    </form>
+    <div id="row-count">Unknown</div>
+    <br />
+  </div>
+  <button id="button">I am a Button</button>
+  <div id="button-indicator">Not Pressed</div> 
+</body>
+</html>

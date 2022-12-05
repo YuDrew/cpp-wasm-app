@@ -15,5 +15,7 @@ That is all!
 - Test C++ Code: `g++ filename.cpp`
 - Test your app: `emcc main.cpp -o test.html --emrun -sFORCE_FILESYSTEM`
 - Run your app: `emrun test.html`
+- `emcc file_functions.cpp -o file_functions_wasm.js --emrun --bind`
+- `emrun index.html --no_emrun_detect`
 
 

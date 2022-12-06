@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Email CSV Processor</title>
+  </head>
+  <body>
+    <h1>Email CSV Processor</h1>
+    <p>
+      This page allows you to upload a CSV file of email addresses, and it
+      will generate a deduped CSV file of the websites associated with each
+      email address.
+    </p>
+    <input type="file" id="csv-file" />
+    <button id="upload-button">Upload CSV File</button>
+    <button id="download-button" disabled>
+      Download Deduplicated CSV File
+    </button>
+    <script src="email_processor.js"></script>
+  </body>
+</html>

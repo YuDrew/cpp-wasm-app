@@ -11,6 +11,7 @@ int main()
     string input;
     vector<string> inputVector = {};
     vector<string> fileVector = {};
+    system("clear");
     while(!sessionEnd){
         cout<<"Welcome to the CSV Manipulator"<<endl;
         cout<<"What would you like to do today?"<<endl;
@@ -34,8 +35,7 @@ int main()
                 read_and_display_csv_cli();
                 break;
             case 2: // Filter CSVs
-                cout<<"FILTER CSVs"<<endl;
-                cout<<"This feature is not yet implemented."<<endl;
+                filter_csv_cli();
                 break;
             case 3: // Sort CSVs
                 cout<<"SORT CSVs"<<endl;
@@ -56,6 +56,7 @@ int main()
                 cout<<"Invalid Input"<<endl;
                 break;
         } // end switch
+        if (sessionEnd) break;
         cout<<"\n\nPress any key to continue..."<<endl;
         cin.ignore();
         cin.get();

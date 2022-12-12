@@ -92,6 +92,125 @@ public:
         columns[column_name] = column_data;
     }
 
+    // Returns the number of rows in the DataFrame
+    size_t n_rows()
+    {
+        return columns.begin()->second.size();
+    }
+
+    // Returns the number of columns in the DataFrame
+    size_t n_columns()
+    {
+        return columns.size();
+    }
+
+    // Returns the column names in the DataFrame
+    std::vector<std::string> column_names()
+    {
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Return the vector
+        return column_names;
+    }
+
+    // Returns the data in a given column
+    std::vector<std::string> column_data(std::string column_name)
+    {
+        return columns[column_name];
+    }
+
+    // Returns the data in a given row
+    std::vector<std::string> row_data(size_t row_index)
+    {
+        // Create a vector to hold the row data
+        std::vector<std::string> row_data;
+
+        // Add the row data to the vector
+        for (const auto &column : columns)
+        {
+            row_data.push_back(column.second[row_index]);
+        }
+
+        // Return the vector
+        return row_data;
+    }
+
+    // Returns the data in a given cell
+    std::string cell_data(std::string column_name, size_t row_index)
+    {
+        return columns[column_name][row_index];
+    }
+
+    // Returns a DataFrame with the given columns
+    DataFrame select(std::vector<std::string> column_names)
+    {
+        // Create a vector to hold the column data
+        std::vector<std::vector<std::string>> column_data;
+
+        // Add the column data to the vector
+        for (const auto &column_name : column_names)
+        {
+            column_data.push_back(columns[column_name]);
+        }
+
+        // Create and return the DataFrame
+        return DataFrame(column_names, column_data);
+    }
+
+    // Returns a DataFrame with the given rows
+    DataFrame select(size_t start_row, size_t end_row)
+    {
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Create a vector to hold the row data
+        std::vector<std::vector<std::string>> row_data;
+
+        // Add the row data to the vector
+        for (size_t i = start_row; i < end_row; i++)
+        {
+            row_data.push_back(this->row_data(i));
+        }
+
+        // Create and return the DataFrame
+        return DataFrame(column_names, row_data);
+    }
+
+    // Returns a DataFrame with the given rows and columns
+    DataFrame select(std::vector<std::string> column_names, size_t start_row, size_t end_row)
+    {
+        // Create a vector to hold the row data
+        std::vector<std::vector<std::string>> row_data;
+
+        // Add the row data to the vector
+        for (size_t i = start_row; i < end_row; i++)
+        {
+            row_data.push_back(this->row_data(i));
+        }
+
+        // Create and return the DataFrame
+        return DataFrame(column_names, row_data);
+    }
+
+    // Checks if the DataFrame contains a given column
+    bool has_column(std::string column_name)
+    {
+        return columns.find(column_name) != columns.end();
+    }
+
     // Prints the DataFrame to the console or a file
     void print(ostream &out = std::cout)
     {
@@ -118,20 +237,22 @@ public:
         }
         out << std::endl;
 
-        // Print the separator
-        for (const auto &column : columns)
-        {
-            out << std::string(displayWidth, '-');
-            if (column.first != columns.rbegin()->first)
+        if(isCout){
+            // Print the separator
+            for (const auto &column : columns)
             {
-                if (isCout) {
-                    out << "\t|";
-                } else {
-                    out << ",";
+                out << std::string(displayWidth, '-');
+                if (column.first != columns.rbegin()->first)
+                {
+                    if (isCout) {
+                        out << "\t|";
+                    } else {
+                        out << ",";
+                    }
                 }
             }
+            out << std::endl;
         }
-        out << std::endl;
 
         // Print the rows
         for (size_t i = 0; i < columns.begin()->second.size(); i++)
@@ -156,10 +277,65 @@ public:
         }
     }
 
+    // filter the DataFrame by a given column and value
+    DataFrame filter(std::string column_name, std::string value)
+    {
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Create a vector to hold the rows
+        std::vector<std::vector<std::string>> rows;
+
+        // Get the column data for the given column
+        std::vector<std::string> column_data = columns[column_name];
+
+        // Get the index of the column
+        int column_index = 0;
+        for (const auto &column : columns)
+        {
+            if (column.first == column_name)
+            {
+                break;
+            }
+            column_index++;
+        }
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Add the rows to the vector
+        for (size_t i = 0; i < column_data.size(); i++)
+        {
+            if (column_data[i] == value)
+            {
+                // Create a vector to hold the row data
+                std::vector<std::string> row_data;
+
+                // Add the row data to the vector
+                for (const auto &column : columns)
+                {
+                    row_data.push_back(column.second[i]);
+                }
+
+                // Add the row to the vector of rows
+                rows.push_back(row_data);
+            }
+        }
+
+        // Create the DataFrame
+        return DataFrame(column_names, rows);
+    }
+
     void to_csv(std::string filename)
     {
+        cout<<"Writing to file: "<<filename<<endl;
         // Open the file
         std::ofstream file(filename);
+
+
 
         // Print the DataFrame to the file
         print(file);

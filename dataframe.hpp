@@ -92,16 +92,43 @@ public:
         columns[column_name] = column_data;
     }
 
-    // Prints the DataFrame to the console
+    // Prints the DataFrame to the console or a file
     void print(ostream &out = std::cout)
     {
+        // If the output is the console, enforce display width of characters per column
+        bool isCout = &out == &std::cout;
+        long unsigned int displayWidth = isCout ? maxDisplayWidth : string::npos;
+
         // Print the column names
         for (const auto &column : columns)
         {
-            out << column.first;
+            out << column.first.substr(0, displayWidth);
+            if (isCout && column.first.length() < displayWidth)
+            {
+                out << std::string(displayWidth - column.first.length(), ' ');
+            }
             if (column.first != columns.rbegin()->first)
             {
-                out << ",";
+                if (isCout) {
+                    out << "\t|";
+                } else {
+                    out << ",";
+                }
+            }
+        }
+        out << std::endl;
+
+        // Print the separator
+        for (const auto &column : columns)
+        {
+            out << std::string(displayWidth, '-');
+            if (column.first != columns.rbegin()->first)
+            {
+                if (isCout) {
+                    out << "\t|";
+                } else {
+                    out << ",";
+                }
             }
         }
         out << std::endl;
@@ -111,10 +138,18 @@ public:
         {
             for (const auto &column : columns)
             {
-                out << column.second[i];
+                out << column.second[i].substr(0, displayWidth);
+                if (isCout && column.second[i].length() < displayWidth)
+                {
+                    out << std::string(displayWidth - column.second[i].length(), ' ');
+                }
                 if (column.first != columns.rbegin()->first)
                 {
-                    out << ",";
+                    if (isCout) {
+                        out << "\t|";
+                    } else {
+                        out << ",";
+                    }
                 }
             }
             out << std::endl;
@@ -141,4 +176,5 @@ public:
 private:
     // Map that stores the column data for the DataFrame, using the column name as the key
     std::map<std::string, std::vector<std::string>> columns;
+    int maxDisplayWidth = 10;
 };

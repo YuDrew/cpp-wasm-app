@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include "cli_methods.hpp"
 
 using namespace std;

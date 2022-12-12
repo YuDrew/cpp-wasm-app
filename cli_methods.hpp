@@ -4,18 +4,26 @@
 using namespace std; 
 
 void cli_create_csv(){
+    string input;
     cout<<"Please enter the relative path of the output file"<<endl;
     string outputfile;
-    cin>>outputfile;
+    cin>>input;
+    outputfile = input;
     while(ifstream(outputfile)){
         cout<<"That file already exists. Enter a different name"<<endl;
-        cin>>outputfile;
+        cin>>input;
+        outputfile = input;
     };
     ofstream fout(outputfile);
 
     cout<<"Please enter the number of columns"<<endl;
     int numColumns;
-    cin>>numColumns;
+    cin>>input;
+    while(!isdigit(input[0])){
+        cout<<"Please enter a valid number of columns"<<endl;
+        cin>>input;
+    }
+    numColumns = stoi(input);
     vector<string> columnNames;
 
     for(int i=0; i<numColumns; i++){
@@ -31,7 +39,7 @@ void cli_create_csv(){
     for(int i=0; i<numRows; i++){
         vector<string> row;
         for(int j=0; j<numColumns; j++){
-            cout<<"Please enter the value for row "<<i+1<<" and column "<<j+1<<endl;
+            cout<<"Please enter the value for row "<<i+1<<" and column "<<columnNames[j]<<endl;
             string value;
             cin>>value;
             row.push_back(value);

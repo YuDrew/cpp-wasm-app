@@ -148,6 +148,86 @@ public:
         return columns[column_name][row_index];
     }
 
+    // Returns a sorted DataFrame by the given column and order
+    DataFrame sort(std::string column_name, bool ascending = true)
+    {
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Create a vector to hold the row data
+        std::vector<std::vector<std::string>> row_data;
+
+        // Add the row data to the vector
+        for (size_t i = 0; i < n_rows(); i++)
+        {
+            row_data.push_back(this->row_data(i));
+        }
+
+        // Create a DataFrame to hold the sorted data
+        DataFrame sorted_df(column_names, row_data);
+
+        // Sort the DataFrame
+        sorted_df.sort_in_place(column_name, ascending);
+
+        // Return the sorted DataFrame
+        return sorted_df;
+    }
+
+    // Sorts the DataFrame by the given column and order
+    void sort_in_place(std::string column_name, bool ascending = true)
+    {
+        // Create a vector to hold the row indices
+        std::vector<size_t> row_indices(n_rows());
+
+        // Initialize the row indices
+        for (size_t i = 0; i < n_rows(); i++)
+        {
+            row_indices[i] = i;
+        }
+
+        // Sort the row indices
+        std::sort(row_indices.begin(), row_indices.end(), [&](size_t a, size_t b) {
+            if (ascending)
+            {
+                return columns[column_name][a] < columns[column_name][b];
+            }
+            else
+            {
+                return columns[column_name][a] > columns[column_name][b];
+            }
+        });
+
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Create a vector to hold the row data
+        std::vector<std::vector<std::string>> row_data;
+
+        // Add the row data to the vector
+        for (size_t i = 0; i < n_rows(); i++)
+        {
+            row_data.push_back(this->row_data(row_indices[i]));
+        }
+
+        // Create a DataFrame to hold the sorted data
+        DataFrame sorted_df(column_names, row_data);
+
+        // Replace the DataFrame with the sorted DataFrame
+        *this = sorted_df;
+    }
+
     // Returns a DataFrame with the given columns
     DataFrame select(std::vector<std::string> column_names)
     {

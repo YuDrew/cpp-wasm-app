@@ -5,6 +5,8 @@
 using namespace std; 
 
 void cli_create_csv(){
+    cout<<"CREATE CSV IN COMMAND LINE"<<endl;
+
     string input;
 
     // Get the name of the output file
@@ -177,4 +179,71 @@ void filter_csv_cli()
 
     // Save the filtered DataFrame
     filteredDf.to_csv(outputfile);
+}
+
+void sort_csv_cli(){
+    cout<<"SORT CSV"<<endl;
+    string filename, outputfile, input;
+
+    // Get the name of the file to sort
+    cout<<"Please enter the relative path of the file you would like to sort"<<endl;
+    cin>>filename;
+    if(!ifstream(filename)){
+        cout<<"Invalid file path. Please enter the relative path of the file you would like to sort"<<endl;
+        cin>>filename;
+    };
+
+    // Preview the DataFrame
+    DataFrame df(filename);
+    df.show();
+
+    // Get the column to sort by
+    cout<<"Please enter the name of the column you would like to sort by"<<endl;
+    string column;
+    cin>>column;
+    while (!df.has_column(column)){
+        cout<<"That column does not exist. Please enter the name of the column you would like to sort by"<<endl;
+        cin>>column;
+    }
+
+    // determine ascending or descending
+    bool ascending = true;
+    cout<<"Would you like to sort in ascending or descending order? A/D"<<endl;
+    cin>>input;
+    while(input != "A" && input != "D"){
+        cout<<"Please enter A or D"<<endl;
+        cin>>input;
+    }
+    if(input == "D"){
+        ascending = false;
+    }
+
+    // Sort the DataFrame and display it
+    df.sort_in_place(column, ascending);
+    df.show();
+    
+    // Confirm that the user wants to save the sorted DataFrame
+    cout<<"Would you like to save the sorted DataFrame? Y/N"<<endl;
+    cin>>input;
+    while(input != "N" && input != "Y"){
+        cout<<"Please enter Y or N"<<endl;
+        cin>>input;
+    }
+    if(input == "N"){
+        return;
+    }
+
+    // Get the name of the output file
+    cout<<"Please enter the relative path of the output file"<<endl;
+    cin>>outputfile;
+    if(ifstream(outputfile)){
+        cout<<"That file already exists. Would you like to overwrite it? Y/N"<<endl;
+        cin>>input;
+        if(input == "N"){
+            outputfile = nullptr;
+        }
+    }
+
+    // Save the sorted DataFrame
+    df.to_csv(outputfile);
 }

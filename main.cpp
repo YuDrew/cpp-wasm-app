@@ -38,11 +38,9 @@ int main()
                 filter_csv_cli();
                 break;
             case 3: // Sort CSVs
-                cout<<"SORT CSVs"<<endl;
-                cout<<"This feature is not yet implemented."<<endl;
+                sort_csv_cli();
                 break;
             case 4: // Create CSV in command line
-                cout<<"CREATE CSV IN COMMAND LINE"<<endl;
                 cli_create_csv();
                 break;
             case 5: // Merge two CSVs

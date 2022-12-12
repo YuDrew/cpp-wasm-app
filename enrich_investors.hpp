@@ -10,6 +10,7 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
+#include "dataframe.hpp"
 
 using namespace std;
 
@@ -19,9 +20,7 @@ void enrich_investors(string deals_path, string organizations_path, string outpu
     ifstream finOrganizations(organizations_path);
     ofstream fout(outputfile);
     
-    string row1;
-    string row2;
-    string row3;
+    DataFrame deals(finDeals);
 
     // Get the headers
     string header1, header2;

@@ -85,10 +85,6 @@ void merge(string file1, string file2, string outputfile)
         }
     }
 
-    // Get the column numbers for the merge columns
-    int mergeColumn1Index = find(header1Vector.begin(), header1Vector.end(), mergeColumn1) - header1Vector.begin();
-    int mergeColumn2Index = find(header2Vector.begin(), header2Vector.end(), mergeColumn2) - header2Vector.begin();
-
     // Get the rows
     vector<string> row1Vector;
     vector<string> row2Vector;
@@ -111,8 +107,8 @@ void merge(string file1, string file2, string outputfile)
 
     // Inner Join
     if(input == "1") {
-        for(int i = 0; i < row1Vector.size(); i++) {
-            for(int j = 0; j < row2Vector.size(); j++) {
+        for(size_t i = 0; i < row1Vector.size(); i++) {
+            for(size_t j = 0; j < row2Vector.size(); j++) {
                 if(row1Vector[i] == row2Vector[j]) {
                     row3Vector.push_back(row1Vector[i]);
                 }
@@ -122,8 +118,8 @@ void merge(string file1, string file2, string outputfile)
 
     // Left Outer Join 
     if(input == "2") {
-        for(int i = 0; i < row1Vector.size(); i++) {
-            for(int j = 0; j < row2Vector.size(); j++) {
+        for(size_t i = 0; i < row1Vector.size(); i++) {
+            for(size_t j = 0; j < row2Vector.size(); j++) {
                 if(row1Vector[i] == row2Vector[j]) {
                     row3Vector.push_back(row1Vector[i]);
                 }
@@ -133,8 +129,8 @@ void merge(string file1, string file2, string outputfile)
 
     // Right Outer Join
     if(input == "3") {
-        for(int i = 0; i < row1Vector.size(); i++) {
-            for(int j = 0; j < row2Vector.size(); j++) {
+        for(size_t i = 0; i < row1Vector.size(); i++) {
+            for(size_t j = 0; j < row2Vector.size(); j++) {
                 if(row1Vector[i] == row2Vector[j]) {
                     row3Vector.push_back(row1Vector[i]);
                 }
@@ -144,8 +140,8 @@ void merge(string file1, string file2, string outputfile)
 
     // Full Outer Join
     if(input == "4") {
-        for(int i = 0; i < row1Vector.size(); i++) {
-            for(int j = 0; j < row2Vector.size(); j++) {
+        for(size_t i = 0; i < row1Vector.size(); i++) {
+            for(size_t j = 0; j < row2Vector.size(); j++) {
                 if(row1Vector[i] == row2Vector[j]) {
                     row3Vector.push_back(row1Vector[i]);
                 }
@@ -154,7 +150,8 @@ void merge(string file1, string file2, string outputfile)
     }
 
     // Write to File
-    for(int i = 0; i < row3Vector.size(); i++) {
+    for(size_t i = 0; i < row3Vector.size(); i++) {
         fout << row3Vector[i] << endl;
     }
 }
+

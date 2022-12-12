@@ -93,3 +93,8 @@ string processCsv(const string& csv) {
 EMSCRIPTEN_BINDINGS(email_processor) {
   emscripten::function("processCsv", &processCsv);
 }
+
+int main () {
+  std::string newCSVData = processCsv('../uploads/launchx_emails.csv');
+  std::cout << newCSVData << std::endl;
+}

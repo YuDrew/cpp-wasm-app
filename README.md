@@ -18,4 +18,15 @@ That is all!
 - `emcc file_functions.cpp -o file_functions_wasm.js -sEXPORTED_RUNTIME_METHODS=[ccall] --emrun --bind `
 - `emrun index.html --no_emrun_detect`
 
+## Target Functionality
+- Terminal prompt for now
+- User can select first CSV
+- The program will confirm this is correct by outputting summary data
+- User can select second CSV
+- Program will confirm this is correct by outputting summary data
+- User can then select columns to merge on and request a particular output name
+- Program will write a new CSV with the merged output name
+
+----
+
 

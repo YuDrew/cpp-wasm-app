@@ -21,6 +21,7 @@ int main()
             "4. Create a CSV in the command line\n"
             "5. Merge two CSVs (Inner Join)\n"
             "6. Enrich Affinity Investor Ecosystem Data\n"
+            "7. List Files in Directory\n"
         <<endl;
         cin>>input;
         switch(stoi(input)) {
@@ -46,6 +47,9 @@ int main()
             case 6: // Enrich Affinity Investor Ecosystem Data
                 cout<<"ENRICH AFFINITY INVESTOR ECOSYSTEM DATA"<<endl;
                 cout<<"This feature is not yet implemented."<<endl;
+                break;
+            case 7: 
+                system("ls");
                 break;
             default:
                 cout<<"Invalid Input"<<endl;

@@ -21,7 +21,7 @@ int main()
             "2. Filter a CSV\n"
             "3. Sort a CSV\n"
             "4. Create a CSV in the command line\n"
-            "5. Merge two CSVs\n"
+            "5. Merge two CSVs (Inner Join)\n"
             "6. Enrich Affinity Investor Ecosystem Data\n"
         <<endl;
         cin>>input;

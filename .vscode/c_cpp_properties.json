@@ -9,7 +9,8 @@
             "macFrameworkPath": [],
             "compilerPath": "/usr/local/bin/gcc-10",
             "cStandard": "gnu17",
-            "intelliSenseMode": "macos-gcc-x64"
+            "intelliSenseMode": "macos-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools"
         }
     ],
     "version": 4

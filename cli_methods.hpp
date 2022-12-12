@@ -9,18 +9,6 @@ void cli_create_csv(){
 
     string input;
 
-    // Get the name of the output file
-    cout<<"Please enter the relative path of the output file"<<endl;
-    string outputfile;
-    cin>>input;
-    outputfile = input;
-    while(ifstream(outputfile)){
-        cout<<"That file already exists. Enter a different name"<<endl;
-        cin>>input;
-        outputfile = input;
-    };
-    ofstream fout(outputfile);
-
     // Get the number of columns
     cout<<"Please enter the number of columns"<<endl;
     int numColumns;
@@ -64,6 +52,18 @@ void cli_create_csv(){
         rows.push_back(row);
     }
 
+    // Get the name of the output file
+    cout<<"Please enter the relative path of the output file"<<endl;
+    string outputfile;
+    cin>>input;
+    outputfile = input;
+    while(ifstream(outputfile)){
+        cout<<"That file already exists. Enter a different name"<<endl;
+        cin>>input;
+        outputfile = input;
+    };
+    ofstream fout(outputfile);
+
     // Create the DataFrame
     DataFrame df(columnNames, rows);
     df.to_csv(outputfile);
@@ -82,24 +82,64 @@ void merge_csvs_cli()
     };
     file1 = input;
 
+    DataFrame df1(file1);
+    df1.show();
+
     cout<<"Please enter the relative path of the second file you would like to merge"<<endl;
     cin>>input;
     if(!ifstream(input)){
         cout<<"Invalid file path"<<endl;
         cin>>input;
     };
+    file2 = input;
 
+    DataFrame df2(file2);
+    df2.show();
+
+    // Get join columns
+    cout<<"Please enter the name of the column you would like to join the first file by"<<endl;
+    string joinColumn1;
+    cin>>joinColumn1;
+    while (!df1.has_column(joinColumn1)){
+        cout<<"That column does not exist. Please enter the name of the column you would like to join the first file by"<<endl;
+        cin>>joinColumn1;
+    }
+
+    cout<<"Please enter the name of the column you would like to join the second file by"<<endl;
+    string joinColumn2;
+    cin>>joinColumn2;
+    while (!df2.has_column(joinColumn2)){
+        cout<<"That column does not exist. Please enter the name of the column you would like to join the second file by"<<endl;
+        cin>>joinColumn2;
+    }
+
+    DataFrame dfJoined = df1.join(df2, joinColumn1, joinColumn2);
+    dfJoined.show();
+
+    cout<<"Would you like to save this DataFrame? Y/N"<<endl;
+    cin>>input;
+    while(input != "Y" && input != "N"){
+        cout<<"Please enter Y or N"<<endl;
+        cin>>input;
+    }
+    if(input == "N"){
+        return;
+    }
+    // Get the name of the output file
     cout<<"Please enter the relative path of the output file"<<endl;
     cin>>outputfile;
     if(ifstream(outputfile)){
         cout<<"That file already exists. Would you like to overwrite it? Y/N"<<endl;
         cin>>input;
+        while(input != "Y" && input != "N"){
+            cout<<"Please enter Y or N"<<endl;
+            cin>>input;
+        }
         if(input == "N"){
             outputfile = nullptr;
         }
     }
-
-    merge(file1, file2, outputfile);
+    dfJoined.to_csv(outputfile);    
 }
 
 void read_and_display_csv_cli()

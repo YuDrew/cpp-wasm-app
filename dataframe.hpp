@@ -285,6 +285,50 @@ public:
         return DataFrame(column_names, row_data);
     }
 
+    // Joins two DataFrames on a given left and right column
+    DataFrame join(DataFrame &df, std::string left_column, std::string right_column)
+    {
+        // Create a vector to hold the column names
+        std::vector<std::string> column_names;
+
+        // Add the column names to the vector
+        for (const auto &column : columns)
+        {
+            column_names.push_back(column.first);
+        }
+        for (const auto &column : df.columns)
+        {
+            column_names.push_back(column.first);
+        }
+
+        // Create a vector to hold the row data
+        std::vector<std::vector<std::string>> row_data;
+
+        // Add the row data to the vector
+        for (size_t i = 0; i < n_rows(); i++)
+        {
+            for (size_t j = 0; j < df.n_rows(); j++)
+            {
+                if (columns[left_column][i] == df.columns[right_column][j])
+                {
+                    std::vector<std::string> row;
+                    for (const auto &column : columns)
+                    {
+                        row.push_back(column.second[i]);
+                    }
+                    for (const auto &column : df.columns)
+                    {
+                        row.push_back(column.second[j]);
+                    }
+                    row_data.push_back(row);
+                }
+            }
+        }
+
+        // Create and return the DataFrame
+        return DataFrame(column_names, row_data);
+    }
+
     // Checks if the DataFrame contains a given column
     bool has_column(std::string column_name)
     {
@@ -409,13 +453,12 @@ public:
         return DataFrame(column_names, rows);
     }
 
+
+
     void to_csv(std::string filename)
     {
-        cout<<"Writing to file: "<<filename<<endl;
         // Open the file
         std::ofstream file(filename);
-
-
 
         // Print the DataFrame to the file
         print(file);

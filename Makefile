@@ -1,14 +1,10 @@
 check-emscripten: 
-	@emcc --version || (echo "Emscripten not found, setting up emscripten";
-	cd ~/Dev/sdk/emsdk &&
-	./emsdk install latest &&
-	./emsdk activate latest &&
-	source ./emsdk_env.sh)
+	@emcc --version || (echo "Emscripten not found, setting up emscripten"; abort 1)
 
 build: check-emscripten
 	@echo "Building"
-	cd ~/Dev/cpp-wasm-app &&
 	emcc -Wall -std=c++20 -g main.cpp -o app.html
+	emrun app.html
 
 local: 
 	@echo "Running locally"

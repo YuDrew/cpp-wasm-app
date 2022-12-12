@@ -6,6 +6,7 @@
 class DataFrame
 {
 public:
+    // ================ CONSTRUCTORS ===============
     // Constructor
     DataFrame() {}
 
@@ -85,12 +86,7 @@ public:
         file.close();
     }
 
-    // Adds a column with a given name and data to the DataFrame
-    void add_column(std::string column_name, std::vector<std::string> column_data)
-    {
-        // Store the column data in the columns map, using the column name as the key
-        columns[column_name] = column_data;
-    }
+    // ================ GETTERS ===============
 
     // Returns the number of rows in the DataFrame
     size_t n_rows()
@@ -104,7 +100,7 @@ public:
         return columns.size();
     }
 
-    // Returns the column names in the DataFrame
+        // Returns the column names in the DataFrame
     std::vector<std::string> column_names()
     {
         // Create a vector to hold the column names
@@ -146,6 +142,15 @@ public:
     std::string cell_data(std::string column_name, size_t row_index)
     {
         return columns[column_name][row_index];
+    }
+
+    // ================ METHODS ===============
+
+    // Adds a column with a given name and data to the DataFrame
+    void add_column(std::string column_name, std::vector<std::string> column_data)
+    {
+        // Store the column data in the columns map, using the column name as the key
+        columns[column_name] = column_data;
     }
 
     // Returns a sorted DataFrame by the given column and order
@@ -226,6 +231,12 @@ public:
 
         // Replace the DataFrame with the sorted DataFrame
         *this = sorted_df;
+    }
+
+    // Extract column data from the DataFrame
+    std::vector<std::string> operator[](std::string column_name)
+    {
+        return columns[column_name];
     }
 
     // Returns a DataFrame with the given columns
@@ -412,17 +423,6 @@ public:
 
         // Get the column data for the given column
         std::vector<std::string> column_data = columns[column_name];
-
-        // Get the index of the column
-        int column_index = 0;
-        for (const auto &column : columns)
-        {
-            if (column.first == column_name)
-            {
-                break;
-            }
-            column_index++;
-        }
 
         // Add the column names to the vector
         for (const auto &column : columns)

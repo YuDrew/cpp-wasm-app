@@ -9,8 +9,6 @@ int main()
 {
     bool sessionEnd = false;
     string input;
-    vector<string> inputVector = {};
-    vector<string> fileVector = {};
     system("clear");
     while(!sessionEnd){
         cout<<"Welcome to the CSV Manipulator"<<endl;
@@ -25,7 +23,6 @@ int main()
             "6. Enrich Affinity Investor Ecosystem Data\n"
         <<endl;
         cin>>input;
-        inputVector.push_back(input);
         switch(stoi(input)) {
             case 0: // Exit
                 cout<<"EXIT"<<endl;

@@ -39,7 +39,7 @@ int main()
                 sort_csv_cli();
                 break;
             case 4: // Create CSV in command line
-                cli_create_csv();
+                create_csv_cli();
                 break;
             case 5: // Merge two CSVs
                 merge_csvs_cli();

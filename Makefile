@@ -3,7 +3,7 @@ check-emscripten:
 
 build: check-emscripten
 	@echo "Building"
-	emcc -Wall -std=c++20 -g main.cpp -o app.html
+	emcc -Wall -std=c++20 -g main.cpp -o app.html --emrun
 	emrun app.html
 
 local: 

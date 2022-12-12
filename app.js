@@ -21,7 +21,24 @@ var Module = typeof Module != 'undefined' ? Module : {};
 
 // --pre-jses are emitted after the Module integration code, so that they can
 // refer to Module (if they choose; they can also define Module)
-// {{PRE_JSES}}
+/**
+ * @license
+ * Copyright 2013 The Emscripten Authors
+ * SPDX-License-Identifier: MIT
+ *
+ * This file gets implicatly injected as a `--pre-js` file when
+ * emcc is run with `--emrun`
+ */
+
+// Route URL GET parameters to argc+argv
+if (typeof window == 'object') {
+  Module['arguments'] = window.location.search.substr(1).trim().split('&');
+  // If no args were passed arguments = [''], in which case kill the single empty string.
+  if (!Module['arguments'][0]) {
+    Module['arguments'] = [];
+  }
+}
+
 
 // Sometimes an existing Module object exists with properties
 // meant to overwrite the default module functionality. Here
@@ -196,6 +213,20 @@ if (ENVIRONMENT_IS_SHELL) {
 
   if (typeof quit == 'function') {
     quit_ = (status, toThrow) => {
+      // Unlike node which has process.exitCode, d8 has no such mechanism. So we
+      // have no way to set the exit code and then let the program exit with
+      // that code when it naturally stops running (say, when all setTimeouts
+      // have completed). For that reason we must call `quit` - the only way to
+      // set the exit code - but quit also halts immediately, so we need to be
+      // careful of whether the runtime is alive or not, which is why this code
+      // path looks different than node. It also has the downside that it will
+      // halt the entire program when no code remains to run, which means this
+      // is not friendly for bundling this code into a larger codebase, and for
+      // that reason the "shell" environment is mainly useful for testing whole
+      // programs by themselves, basically.
+      if (runtimeKeepaliveCounter) {
+        throw toThrow;
+      }
       logExceptionOnExit(toThrow);
       quit(status);
     };
@@ -440,7 +471,7 @@ function unexportedRuntimeSymbol(sym) {
 
 var wasmBinary;
 if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];legacyModuleProp('wasmBinary', 'wasmBinary');
-var noExitRuntime = Module['noExitRuntime'] || true;legacyModuleProp('noExitRuntime', 'noExitRuntime');
+var noExitRuntime = Module['noExitRuntime'] || false;legacyModuleProp('noExitRuntime', 'noExitRuntime');
 
 if (typeof WebAssembly != 'object') {
   abort('no native wasm support detected');
@@ -785,8 +816,11 @@ var __ATPOSTRUN__ = []; // functions called after the main() is called
 
 var runtimeInitialized = false;
 
+var runtimeExited = false;
+var runtimeKeepaliveCounter = 0;
+
 function keepRuntimeAlive() {
-  return noExitRuntime;
+  return noExitRuntime || runtimeKeepaliveCounter > 0;
 }
 
 function preRun() {
@@ -822,6 +856,15 @@ function preMain() {
   callRuntimeCallbacks(__ATMAIN__);
 }
 
+function exitRuntime() {
+  checkStackCookie();
+  ___funcs_on_exit(); // Native atexit() functions
+  callRuntimeCallbacks(__ATEXIT__);
+  FS.quit();
+TTY.shutdown();
+  runtimeExited = true;
+}
+
 function postRun() {
   checkStackCookie();
 
@@ -848,6 +891,7 @@ function addOnPreMain(cb) {
 }
 
 function addOnExit(cb) {
+  __ATEXIT__.unshift(cb);
 }
 
 function addOnPostRun(cb) {
@@ -1022,6 +1066,7 @@ function createExportWrapper(name, fixedasm) {
       asm = Module['asm'];
     }
     assert(runtimeInitialized, 'native function `' + displayName + '` called before runtime initialization');
+    assert(!runtimeExited, 'native function `' + displayName + '` called after runtime exit (use NO_EXIT_RUNTIME to keep it alive after main() exits)');
     if (!asm[name]) {
       assert(asm[name], 'exported native function `' + displayName + '` not found');
     }
@@ -4363,11 +4408,13 @@ var ASM_CONSTS = {
   function exitJS(status, implicit) {
       EXITSTATUS = status;
   
-      checkUnflushedContent();
+      if (!keepRuntimeAlive()) {
+        exitRuntime();
+      }
   
       // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
       if (keepRuntimeAlive() && !implicit) {
-        var msg = 'program exited (with status: ' + status + '), but EXIT_RUNTIME is not set, so halting execution but not exiting the runtime or preventing further async execution (build with EXIT_RUNTIME=1, if you want a true shutdown)';
+        var msg = 'program exited (with status: ' + status + '), but keepRuntimeAlive() is set (counter=' + runtimeKeepaliveCounter + ') due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)';
         err(msg);
       }
   
@@ -4593,6 +4640,9 @@ var _main = Module["_main"] = createExportWrapper("main");
 
 /** @type {function(...*):?} */
 var ___errno_location = Module["___errno_location"] = createExportWrapper("__errno_location");
+
+/** @type {function(...*):?} */
+var ___funcs_on_exit = Module["___funcs_on_exit"] = createExportWrapper("__funcs_on_exit");
 
 /** @type {function(...*):?} */
 var _fflush = Module["_fflush"] = createExportWrapper("fflush");
@@ -5142,45 +5192,6 @@ function run(args) {
   checkStackCookie();
 }
 
-function checkUnflushedContent() {
-  // Compiler settings do not allow exiting the runtime, so flushing
-  // the streams is not possible. but in ASSERTIONS mode we check
-  // if there was something to flush, and if so tell the user they
-  // should request that the runtime be exitable.
-  // Normally we would not even include flush() at all, but in ASSERTIONS
-  // builds we do so just for this check, and here we see if there is any
-  // content to flush, that is, we check if there would have been
-  // something a non-ASSERTIONS build would have not seen.
-  // How we flush the streams depends on whether we are in SYSCALLS_REQUIRE_FILESYSTEM=0
-  // mode (which has its own special function for this; otherwise, all
-  // the code is inside libc)
-  var oldOut = out;
-  var oldErr = err;
-  var has = false;
-  out = err = (x) => {
-    has = true;
-  }
-  try { // it doesn't matter if it fails
-    _fflush(0);
-    // also flush in the JS FS layer
-    ['stdout', 'stderr'].forEach(function(name) {
-      var info = FS.analyzePath('/dev/' + name);
-      if (!info) return;
-      var stream = info.object;
-      var rdev = stream.rdev;
-      var tty = TTY.ttys[rdev];
-      if (tty && tty.output && tty.output.length) {
-        has = true;
-      }
-    });
-  } catch(e) {}
-  out = oldOut;
-  err = oldErr;
-  if (has) {
-    warnOnce('stdio streams had content in them that was not flushed. you should set EXIT_RUNTIME to 1 (see the FAQ), or make sure to emit a newline when you printf etc.');
-  }
-}
-
 if (Module['preInit']) {
   if (typeof Module['preInit'] == 'function') Module['preInit'] = [Module['preInit']];
   while (Module['preInit'].length > 0) {
@@ -5199,3 +5210,98 @@ run();
 
 
 
+/**
+ * @license
+ * Copyright 2013 The Emscripten Authors
+ * SPDX-License-Identifier: MIT
+ *
+ * This file gets implicatly injected as a `--post-js` file when
+ * emcc is run with `--emrun`
+ */
+
+if (typeof window == "object" && (typeof ENVIRONMENT_IS_PTHREAD == 'undefined' || !ENVIRONMENT_IS_PTHREAD)) {
+  var emrun_register_handlers = () => {
+    // When C code exit()s, we may still have remaining stdout and stderr
+    // messages in flight. In that case, we can't close the browser until all
+    // those XHRs have finished, so the following state variables track that all
+    // communication is done, after which we can close.
+    var emrun_num_post_messages_in_flight = 0;
+    var emrun_should_close_itself = false;
+    var postExit = (msg) => {
+      var http = new XMLHttpRequest();
+      // Don't do this immediately, this may race with the notification about
+      // the return code reaching the server. Send a *sync* xhr so that we know
+      // for sure that the server has gotten the return code before we continue.
+      http.open("POST", "stdio.html", false);
+      http.send(msg);
+      try {
+        // Try closing the current browser window, since it exit()ed itself.
+        // This can shut down the browser process and then emrun does not need
+        // to kill the whole browser process.
+        window.close();
+      } catch(e) {}
+    };
+    var post = (msg) => {
+      var http = new XMLHttpRequest();
+      ++emrun_num_post_messages_in_flight;
+      http.onreadystatechange = () => {
+        if (http.readyState == 4 /*DONE*/) {
+          if (--emrun_num_post_messages_in_flight == 0 && emrun_should_close_itself) {
+            postExit('^exit^'+EXITSTATUS);
+          }
+        }
+      }
+      http.open("POST", "stdio.html", true);
+      http.send(msg);
+    };
+    // If the address contains localhost, or we are running the page from port
+    // 6931, we can assume we're running the test runner and should post stdout
+    // logs.
+    if (document.URL.search("localhost") != -1 || document.URL.search(":6931/") != -1) {
+      var emrun_http_sequence_number = 1;
+      var prevPrint = out;
+      var prevErr = err;
+      addOnExit(() => {
+        if (emrun_num_post_messages_in_flight == 0) {
+          postExit('^exit^'+EXITSTATUS);
+        } else {
+          emrun_should_close_itself = true;
+        }
+      });
+      out = (text) => {
+        post('^out^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text));
+        prevPrint(text);
+      };
+      err = (text) => {
+        post('^err^'+(emrun_http_sequence_number++)+'^'+encodeURIComponent(text));
+        prevErr(text);
+      };
+
+      // Notify emrun web server that this browser has successfully launched the
+      // page. Note that we may need to wait for the server to be ready.
+      var tryToSendPageload = () => {
+        try {
+          post('^pageload^');
+        } catch (e) {
+          setTimeout(tryToSendPageload, 50);
+        }
+      };
+      tryToSendPageload();
+    }
+  };
+
+  // POSTs the given binary data represented as a (typed) array data back to the
+  // emrun-based web server.
+  // To use from C code, call e.g:
+  //   EM_ASM({emrun_file_dump("file.dat", HEAPU8.subarray($0, $0 + $1));}, my_data_pointer, my_data_pointer_byte_length);
+  var emrun_file_dump = (filename, data) => {
+    var http = new XMLHttpRequest();
+    out('Dumping out file "' + filename + '" with ' + data.length + ' bytes of data.');
+    http.open("POST", "stdio.html?file=" + filename, true);
+    http.send(data); // XXX  this does not work in workers, for some odd reason (issue #2681)
+  };
+
+  if (typeof document != 'undefined') {
+    emrun_register_handlers();
+  }
+}
